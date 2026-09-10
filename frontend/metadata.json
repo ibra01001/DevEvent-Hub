@@ -1,0 +1,6 @@
+{
+  "name": "DevEvent Hub",
+  "description": "A modern platform for discovering, searching, filtering, and submitting technology events, hackathons, meetups, and conferences.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
