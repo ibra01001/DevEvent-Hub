@@ -147,9 +147,13 @@ export const eventApi = {
     return json;
   },
 
-  async uploadImage(file: File): Promise<{ success: boolean; data: { url: string; publicId: string }; message: string }> {
+  async uploadImage(file: File, folderName?: string): Promise<{ success: boolean; data: { url: string; publicId: string }; message: string }> {
     const formData = new FormData();
     formData.append('image', file);
+
+    if (folderName && folderName.trim()) {
+      formData.append('folder', folderName.trim());
+    }
 
     const res = await fetch(`${API_BASE}/upload`, {
       method: 'POST',

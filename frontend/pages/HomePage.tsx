@@ -95,7 +95,7 @@ export const HomePage: React.FC = () => {
 
           {/* Large Hero Search Bar */}
           <div className="max-w-2xl mx-auto mb-8 shadow-xl shadow-violet-500/5">
-            <SearchBar size="lg" placeholder="Search hackathons, meetups, Python, AI, React..." />
+            <SearchBar size="lg" placeholder="Search hackathons, meetups, Python, AI, Delivery..." />
           </div>
 
           {/* Action CTAs */}

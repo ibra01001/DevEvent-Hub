@@ -51,9 +51,16 @@ router.post('/upload', (req, res) => {
         });
       }
 
+      const rawFolderName = typeof req.body.folder === 'string' ? req.body.folder : 'untitled-event';
+      const safeFolderName = rawFolderName
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'untitled-event';
+
       const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       const result = await cloudinaryService.uploader.upload(base64, {
-        folder: 'devevent/events',
+        folder: `devevent/events/${safeFolderName}`,
         resource_type: 'image',
         transformation: [{ quality: 'auto', fetch_format: 'auto' }]
       });

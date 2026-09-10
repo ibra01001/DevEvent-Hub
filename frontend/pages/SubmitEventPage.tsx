@@ -33,16 +33,17 @@ const AVAILABLE_TECHS = [
   'TypeScript',
   'Python',
   'AI',
-  'Machine Learning',
-  'Rust',
-  'Go',
-  'Kubernetes',
-  'Next.js',
   'Node.js',
-  'GraphQL',
-  'Cloud',
+  'Rust',
+  'Tech Stack',
+  'Hardware',
+  'Delivery',
+  'Freelance',
   'Web3',
-  'DevOps'
+  'Blockchain',
+  'Cloud',
+  'DevOps',
+  'Mobile'
 ];
 
 export const SubmitEventPage: React.FC = () => {
@@ -61,8 +62,6 @@ export const SubmitEventPage: React.FC = () => {
     locationType: 'online' as LocationType,
     location: 'Global / Virtual Livestream',
     onlineUrl: 'https://deveventhub.com/join-stream',
-    organizer: '',
-    organizerEmail: '',
     website: '',
     coverImage: CURATED_COVERS[0],
     customCover: '',
@@ -80,12 +79,6 @@ export const SubmitEventPage: React.FC = () => {
     if (!formData.title.trim()) errors.title = 'Event title is required.';
     if (!formData.description.trim()) errors.description = 'Short description is required.';
     if (formData.description.trim().length > 300) errors.description = 'Description should be under 300 characters.';
-    if (!formData.organizer.trim()) errors.organizer = 'Organizer name is required.';
-    if (!formData.organizerEmail.trim()) {
-      errors.organizerEmail = 'Organizer email is required.';
-    } else if (!/\S+@\S+\.\S+/.test(formData.organizerEmail)) {
-      errors.organizerEmail = 'Please provide a valid email.';
-    }
     if (!formData.startDate) errors.startDate = 'Start date is required.';
     if (!formData.endDate) errors.endDate = 'End date is required.';
     if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
@@ -130,7 +123,11 @@ export const SubmitEventPage: React.FC = () => {
 
       if (formData.customCover && formData.customCover.startsWith('data:')) {
         const file = await fetch(formData.customCover).then(res => res.blob());
-        const uploaded = await eventApi.uploadImage(new File([file], 'event-cover-image', { type: file.type || 'image/jpeg' }));
+        const eventFolderName = formData.title.trim() || 'untitled-event';
+        const uploaded = await eventApi.uploadImage(
+          new File([file], `${eventFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-cover`, { type: file.type || 'image/jpeg' }),
+          eventFolderName
+        );
         coverImage = uploaded.data.url;
       }
 
@@ -145,8 +142,8 @@ export const SubmitEventPage: React.FC = () => {
         locationType: formData.locationType,
         location: formData.location.trim() || (formData.locationType === 'online' ? 'Online' : 'TBD'),
         onlineUrl: formData.onlineUrl.trim() || undefined,
-        organizer: formData.organizer.trim(),
-        organizerEmail: formData.organizerEmail.trim(),
+        organizer: 'Community Organizer',
+        organizerEmail: 'community@deveventhub.com',
         website: formData.website.trim() || undefined,
         coverImage,
         participantsLimit: Number(formData.participantsLimit) || undefined,
@@ -169,17 +166,30 @@ export const SubmitEventPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      toastError('Invalid image', 'Please choose a valid image file (JPG, PNG, WEBP, GIF).');
+      event.target.value = '';
+      return;
+    }
+
     setUploadingImage(true);
     try {
-      const uploaded = await eventApi.uploadImage(file);
+      const reader = new FileReader();
+      const result = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Failed to read the selected image.'));
+        reader.readAsDataURL(file);
+      });
+
       setFormData(prev => ({
         ...prev,
-        customCover: uploaded.data.url,
-        coverImage: uploaded.data.url
+        customCover: result,
+        coverImage: result
       }));
-      success('Image uploaded', 'Your event cover image is now stored in Cloudinary.');
+      success('Image selected', 'Your image is ready and will be uploaded to Cloudinary only when you submit the form.');
     } catch (err: any) {
-      toastError('Upload failed', err.message || 'Unable to upload the image.');
+      toastError('Image selection failed', err.message || 'Unable to prepare the image for upload.');
     } finally {
       setUploadingImage(false);
       event.target.value = '';
@@ -198,8 +208,8 @@ export const SubmitEventPage: React.FC = () => {
     endDate: formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 86400000 * 8).toISOString(),
     locationType: formData.locationType,
     location: formData.location || 'Online',
-    organizer: formData.organizer || 'Community Organizer',
-    organizerEmail: formData.organizerEmail || 'contact@example.com',
+    organizer: 'Community Organizer',
+    organizerEmail: 'community@deveventhub.com',
     coverImage: formData.customCover || formData.coverImage,
     status: 'pending',
     featured: false,
@@ -339,12 +349,12 @@ export const SubmitEventPage: React.FC = () => {
               <span className="w-6 h-6 rounded-lg bg-violet-600 text-white text-xs flex items-center justify-center font-mono">
                 2
               </span>
-              <span>Technologies & Toolchains</span>
+              <span>Tags</span>
             </h2>
 
             <div>
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Selected Technologies <span className="text-rose-500">*</span>
+                Selected Tags <span className="text-rose-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2 mb-3 min-h-[38px] p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
                 {formData.technologies.map(t => (
@@ -369,6 +379,30 @@ export const SubmitEventPage: React.FC = () => {
                   <span>{formErrors.technologies}</span>
                 </p>
               )}
+
+              <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                <input
+                  type="text"
+                  value={formData.newTechInput}
+                  onChange={e => setFormData({ ...formData, newTechInput: e.target.value })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTech(formData.newTechInput);
+                    }
+                  }}
+                  placeholder="Add a custom tags (e.g. Technologies, Supabase, AI Agents)"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddTech(formData.newTechInput)}
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-violet-500/40 bg-violet-500/10 text-xs font-semibold text-violet-700 dark:text-violet-200 hover:bg-violet-500/15"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Tech
+                </button>
+              </div>
 
               {/* Quick Add Presets */}
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -495,48 +529,14 @@ export const SubmitEventPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 4: Organizer & Media */}
+          {/* Section 4: Cover Image */}
           <div className="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-xs space-y-4">
             <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-violet-600 text-white text-xs flex items-center justify-center font-mono">
                 4
               </span>
-              <span>Organizer & Cover Image</span>
+              <span>Cover Image</span>
             </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Organizer / Company Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.organizer}
-                  onChange={e => setFormData({ ...formData, organizer: e.target.value })}
-                  placeholder="e.g. OpenAI Builders Collective"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-                {formErrors.organizer && (
-                  <p className="text-xs text-rose-500 mt-1">{formErrors.organizer}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Organizer Contact Email <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.organizerEmail}
-                  onChange={e => setFormData({ ...formData, organizerEmail: e.target.value })}
-                  placeholder="contact@example.com"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-                {formErrors.organizerEmail && (
-                  <p className="text-xs text-rose-500 mt-1">{formErrors.organizerEmail}</p>
-                )}
-              </div>
-            </div>
 
             {/* Curated Cover Picks */}
             <div>
@@ -569,7 +569,7 @@ export const SubmitEventPage: React.FC = () => {
                 />
                 <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2.5 text-xs font-semibold text-violet-700 dark:text-violet-200">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{uploadingImage ? 'Uploading...' : 'Upload file'}</span>
+                  <span>{uploadingImage ? 'Preparing image...' : 'Choose image'}</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                 </label>
               </div>

@@ -28,10 +28,15 @@ const POPULAR_TECHS = [
   'AI',
   'Node.js',
   'Rust',
-  'Go',
-  'Kubernetes',
-  'GraphQL',
-  'Next.js'
+  'Tech Stack',
+  'Hardware',
+  'Delivery',
+  'Freelance',
+  'Web3',
+  'Blockchain',
+  'Cloud',
+  'DevOps',
+  'Mobile'
 ];
 
 const LOCATION_OPTIONS = [

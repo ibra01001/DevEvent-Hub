@@ -241,7 +241,7 @@ export const EventRepository = {
     return EventModel.findByIdAndUpdate(
       id,
       { ...updates, updatedAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     ).lean();
   },
 
