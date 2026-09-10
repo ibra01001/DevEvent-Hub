@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import fs from 'fs';
 import 'dotenv/config';
 
 // Ensure Web Crypto API is available as `globalThis.crypto` for libraries
@@ -47,10 +48,15 @@ async function startServer() {
 
   if (process.env.NODE_ENV === 'production') {
     const distPath = path.resolve(process.cwd(), 'frontend', 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    const indexFile = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexFile)) {
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(indexFile);
+      });
+    } else {
+      console.log('[DevEvent Hub] Production mode but frontend/dist not found — skipping static file serving.');
+    }
   } else {
     console.log('[DevEvent Hub] Development mode: run frontend with `npm run dev` in /frontend');
   }
