@@ -4,6 +4,13 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import 'dotenv/config';
 
+// Ensure Web Crypto API is available as `globalThis.crypto` for libraries
+// that expect the browser-style `crypto` global (fixes "crypto is not defined").
+import { webcrypto as nodeWebCrypto } from 'crypto';
+if (!(globalThis as any).crypto) {
+  (globalThis as any).crypto = nodeWebCrypto;
+}
+
 import { initDatabase, EventRepository } from './db.ts';
 import eventRoutes from './routes/eventRoutes.ts';
 import authRoutes from './routes/authRoutes.ts';
